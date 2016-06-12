@@ -51,6 +51,7 @@ All logs are provided in file `/var/log/kernel.log` or you can use `dmesg` comma
 Must read
 ---------
 
-https://sysplay.in/blog/tag/character-device-files/
+https://sysplay.in/blog/tag/character-device-files/    
+
 http://derekmolloy.ie/writing-a-linux-kernel-module-part-2-a-character-device/
 
