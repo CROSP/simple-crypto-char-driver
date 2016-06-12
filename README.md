@@ -34,7 +34,7 @@ OR
 
 `insmod crypto_dev.ko shift=23`    
 
-This is shifting coefficient used when shifting input text.      
+This is shifting coefficient used while shifting input text.      
 
 You can also change this parameter in runtime.    
 To do this obtain `root` privileges and set desired value in the file `/sys/module/crypto_dev/parameters/shift`     
