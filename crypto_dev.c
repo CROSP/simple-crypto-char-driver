@@ -47,6 +47,11 @@ static struct device* dev_crypt_device = NULL;
 static char  message[MESSAGE_SIZE] = {0};
 static short size_of_message;
 static int device_open_times = 0;
+
+// Define mutex 
+
+static DEFINE_MUTEX(crypto_dev_mutex);
+
 // Module params
 static short shift = 1;
 
@@ -54,6 +59,8 @@ module_param(shift, short, S_IRUSR | S_IWUSR);
 // Initialization of module
 
 static int __init device_init(void) {
+	// Init mutex
+	mutex_init(&crypto_dev_mutex); 
 	// Find major number for device dynamically
 	major_number = register_chrdev(0,DEVICE_NAME,&fops);
 	if(major_number < 0) {
@@ -93,6 +100,8 @@ static int __init device_init(void) {
 // Clean up resource, module is going to be unloaded
 
 static void __exit device_exit(void) {
+	// Destroy mutex   
+	mutex_destroy(&crypto_dev_mutex); 
 	device_destroy(dev_crypt_class, MKDEV(major_number, 0));
  	class_unregister(dev_crypt_class);
 	class_destroy(dev_crypt_class);
@@ -101,6 +110,10 @@ static void __exit device_exit(void) {
 }
 
 static int dev_open(struct inode* inod,struct file * fil) {
+	if(!mutex_trylock(&crypto_dev_mutex)){
+		printk(KERN_ALERT "CRYPTO DEVICE : Device is used by another process at the moment \n");
+      	return -EBUSY;
+	} 
 	device_open_times++;
 	printk(KERN_INFO "CRYPTO DEVICE : Device was opened %d times \n",device_open_times);
 	printk(KERN_INFO "CRYPTO DEVICE : DEBUG: Passed %s %d \n",__FUNCTION__,__LINE__);
@@ -138,6 +151,8 @@ static ssize_t dev_write(struct file * to_open,const char *buff,size_t len,loff_
    return len;
 }
 static int dev_release(struct inode *inod,struct file * file) {
+	// Release mutex
+	mutex_unlock(&crypto_dev_mutex);
 	printk(KERN_INFO "Releasing device with major number %d \n",major_number);
 	return 0;
 }
