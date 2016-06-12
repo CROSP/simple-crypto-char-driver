@@ -16,17 +16,14 @@
 #define DEVICE_NAME "crypto_dev"
 #define CLASS_NAME "crypto"
 #define MESSAGE_SIZE 1024
+#define MAX_CHAR_CODE 255
 
 MODULE_LICENSE("GPL");            
 MODULE_AUTHOR("Alexander Molochko, http://crosp.net"); 
 MODULE_DESCRIPTION("A simple character device driver which encrypts data (simple shifting)"); 
 MODULE_VERSION("1.0");
+MODULE_PARM_DESC(shift, "Shift amount of each character");  ///< parameter description
 
-// Module arguments 
-/*static int shift = 1;
-module_param(name, int, S_IRUGO); ///< Param desc. charp = char ptr, S_IRUGO can be read/not changed
-MODULE_PARM_DESC(name, "Number to shift input characters");  ///< parameter description
-*/
 // Function protoypes 
 
 static int dev_open(struct inode *,struct file *);
@@ -50,8 +47,10 @@ static struct device* dev_crypt_device = NULL;
 static char  message[MESSAGE_SIZE] = {0};
 static short size_of_message;
 static int device_open_times = 0;
-static int shift = 1;
+// Module params
+static short shift = 1;
 
+module_param(shift, short, S_IRUSR | S_IWUSR);
 // Initialization of module
 
 static int __init device_init(void) {
@@ -87,6 +86,7 @@ static int __init device_init(void) {
 	else {
 		printk(KERN_INFO "CRYPTO DEVICE : Device structure creation is successful. Major number is %d \n",major_number);		
 	}
+	printk(KERN_INFO "CRYPTO DEVICE : Shifting coefficient is %d \n",shift);
 	return 0;
 }
 
@@ -107,6 +107,7 @@ static int dev_open(struct inode* inod,struct file * fil) {
 	return 0;
 }
 static ssize_t dev_read(struct file * in_file,char * buff,size_t len,loff_t *off) {
+	printk(KERN_INFO "CRYPTO DEVICE : Shifting coefficient is %d \n",shift);
     int is_any_error = 0;
 	is_any_error = copy_to_user(buff, message, size_of_message);
 	if(is_any_error == 0) {
@@ -120,6 +121,12 @@ static ssize_t dev_read(struct file * in_file,char * buff,size_t len,loff_t *off
 	}
 }
 static ssize_t dev_write(struct file * to_open,const char *buff,size_t len,loff_t *off) {
+   printk(KERN_INFO "CRYPTO DEVICE : Shifting coefficient is %d \n",shift);
+   // Check bounds of char
+   if (shift >= MAX_CHAR_CODE) {
+   		shift = 1;
+  		printk(KERN_ALERT "CRYPTO DEVICE : Invalid shift coefficient, resetting to 1 \n");
+   }
    // Clear buffer before write data
    memset(message,0,strlen(message));
    // Copy input buffer
