@@ -21,8 +21,8 @@ Installation
 
 **Or** 
 
-3.Simply call `insmod crypto_dev.ko` 
-4.Remove module using `rmmod crypto_dev`
+3. Call `insmod crypto_dev.ko` 
+4. Remove module using `rmmod crypto_dev`
 
 Log
 ---
